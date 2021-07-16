@@ -131,3 +131,4 @@ dmypy.json
 #IntelliJ
 *.iml
 .idea/
+results/

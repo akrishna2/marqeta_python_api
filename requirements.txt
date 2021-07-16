@@ -1,3 +1,4 @@
 pytest
 requests
 requests-auth
+allure-pytest
