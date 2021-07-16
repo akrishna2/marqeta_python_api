@@ -21,3 +21,6 @@
 ### To run test:
 - `pytest -s --alluredir results`
 
+### To see test report:
+- `allure serve results`
+
