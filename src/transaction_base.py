@@ -3,6 +3,8 @@ import allure
 import requests
 from requests.auth import HTTPBasicAuth
 import json
+import names
+import cryptocode
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
@@ -29,17 +31,19 @@ class TransactionBase(object):
         self.user_token = None
         self.card_product_token = None
         self.card_token = None
+        self.user = "18da7496-be57-4d36-abb5-00f53dd8bb17"
+        self.password = cryptocode.decrypt(self.get_encrypted_password(), self.get_key())
 
     @allure.step("Get user token")
     def create_user(self):
-        data = '{"first_name": "Abhishek","last_name": "Krishna","active": true}'
-        user = "18da7496-be57-4d36-abb5-00f53dd8bb17"
-        password = "acda937f-6b95-4789-a1c8-613be4117c2b"
+        self.first_name = names.get_first_name()
+        self.last_name = names.get_last_name()
+        data = '{"first_name": "'+self.first_name+'","last_name": "'+self.last_name+'","active": true}'
         response = requests.post("https://sandbox-api.marqeta.com/v3/users",
                                  headers={
                                      'content-type': 'application/json',
                                  },
-                                 auth=HTTPBasicAuth(user, password),
+                                 auth=HTTPBasicAuth(self.user, self.password),
                                  data=data)
         assert response.status_code == 201
         self.user_token = response.json()['token']
@@ -47,13 +51,11 @@ class TransactionBase(object):
 
     @allure.step("Retrieve user using user token")
     def retrive_user(self):
-        user = "18da7496-be57-4d36-abb5-00f53dd8bb17"
-        password = "acda937f-6b95-4789-a1c8-613be4117c2b"
         response = requests.get("https://sandbox-api.marqeta.com/v3/users/" + self.user_token,
                                 headers={
                                     'content-type': 'application/json',
                                 },
-                                auth=HTTPBasicAuth(user, password))
+                                auth=HTTPBasicAuth(self.user, self.password))
         assert response.status_code == 200
         # print(json.dumps(response.json(), indent=4))
         return self
@@ -65,8 +67,8 @@ class TransactionBase(object):
                                 headers={
                                     'content-type': 'application/json',
                                     'accept': 'application/json',
-                                    'Authorization': 'Basic MThkYTc0OTYtYmU1Ny00ZDM2LWFiYjUtMDBmNTNkZDhiYjE3OmFjZGE5MzdmLTZiOTUtNDc4OS1hMWM4LTYxM2JlNDExN2MyYg=='
-                                },
+                                    },
+                                auth=HTTPBasicAuth(self.user, self.password),
                                 data=data)
         assert response.status_code == 200
         self.card_product_token = response.json()['data'][0]['token']
@@ -79,8 +81,8 @@ class TransactionBase(object):
                                  headers={
                                      'content-type': 'application/json',
                                      'accept': 'application/json',
-                                     'Authorization': 'Basic MThkYTc0OTYtYmU1Ny00ZDM2LWFiYjUtMDBmNTNkZDhiYjE3OmFjZGE5MzdmLTZiOTUtNDc4OS1hMWM4LTYxM2JlNDExN2MyYg=='
-                                 },
+                                     },
+                                 auth=HTTPBasicAuth(self.user, self.password),
                                  data=data)
         assert response.status_code == 201
         self.card_token = response.json()['token']
@@ -92,8 +94,8 @@ class TransactionBase(object):
                                 headers={
                                     'content-type': 'application/json',
                                     'accept': 'application/json',
-                                    'Authorization': 'Basic MThkYTc0OTYtYmU1Ny00ZDM2LWFiYjUtMDBmNTNkZDhiYjE3OmFjZGE5MzdmLTZiOTUtNDc4OS1hMWM4LTYxM2JlNDExN2MyYg=='
-                                })
+                                    },
+                                auth=HTTPBasicAuth(self.user, self.password))
         assert response.status_code == 200
         return self
 
@@ -104,8 +106,15 @@ class TransactionBase(object):
                                  headers={
                                      'content-type': 'application/json',
                                      'accept': 'application/json',
-                                     'Authorization': 'Basic MThkYTc0OTYtYmU1Ny00ZDM2LWFiYjUtMDBmNTNkZDhiYjE3OmFjZGE5MzdmLTZiOTUtNDc4OS1hMWM4LTYxM2JlNDExN2MyYg=='
-                                 },
+                                     },
+                                 auth=HTTPBasicAuth(self.user, self.password),
                                  data=data)
         assert response.status_code == 201
         return self
+
+    def get_encrypted_password(self):
+        encrypted_password = "/8d3Yg0oBqdumCFHIt3zXyfO45zrHWcPvVNEHQyklLwPdcJn*xPUMBBRQF6tByMyuTbPD+w==*WL1oQEYQQfSJexCBoTj1cA==*c+gvGMWnLj96iJesVdjTzw=="
+        return encrypted_password
+
+    def get_key(self):
+        return "marqeta_key"
